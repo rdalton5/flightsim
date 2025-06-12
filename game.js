@@ -203,46 +203,46 @@ function updatePlane() {
 function onKeyDown(event) {
     if (!gameStarted) return;
     
-    switch (event.keyCode) {
-        case 38: // up
+    switch (event.key.toLowerCase()) {
+        case 'w':
             movement.forward = true;
             break;
-        case 40: // down
+        case 's':
             movement.backward = true;
             break;
-        case 37: // left
+        case 'a':
             movement.left = true;
             break;
-        case 39: // right
+        case 'd':
             movement.right = true;
             break;
-        case 32: // space
+        case ' ':
             movement.up = true;
             break;
-        case 16: // shift
+        case 'shift':
             movement.down = true;
             break;
     }
 }
 
 function onKeyUp(event) {
-    switch (event.keyCode) {
-        case 38: // up
+    switch (event.key.toLowerCase()) {
+        case 'w':
             movement.forward = false;
             break;
-        case 40: // down
+        case 's':
             movement.backward = false;
             break;
-        case 37: // left
+        case 'a':
             movement.left = false;
             break;
-        case 39: // right
+        case 'd':
             movement.right = false;
             break;
-        case 32: // space
+        case ' ':
             movement.up = false;
             break;
-        case 16: // shift
+        case 'shift':
             movement.down = false;
             break;
     }
