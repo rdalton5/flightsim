@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Flight Simulator</title>
+    <title>Space Flight Simulator</title>
     <style>
         body { 
             margin: 0;
             overflow: hidden;
-            background-color: #87CEEB;
+            background-color: #000033;
+            color: #fff;
         }
         #score {
             position: absolute;
@@ -77,23 +78,49 @@
         #controlsOverlay p {
             margin: 5px 0;
         }
+        
+        #positionDisplay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        #score {
+            top: 20px;
+            left: 200px;
+        }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
+    <div id="positionDisplay">
+        <div>X: <span id="posX">0.00</span></div>
+        <div>Y: <span id="posY">0.00</span></div>
+        <div>Z: <span id="posZ">0.00</span></div>
+        <div>Speed: <span id="speed">0.00</span></div>
+    </div>
     <div id="controlsOverlay">
         <h3>Controls</h3>
         <p>W - Move Forward</p>
         <p>S - Move Backward</p>
         <p>A - Turn Left</p>
         <p>D - Turn Right</p>
+        <p>Q - Strafe Left</p>
+        <p>E - Strafe Right</p>
         <p>SPACE - Move Up</p>
         <p>SHIFT - Move Down</p>
     </div>
     <div id="startScreen">
-        <h1>3D Flight Simulator</h1>
-        <p>Fly through the rings to score points!</p>
-        <p>Controls: WASD to move, Space to go up, Shift to go down</p>
+        <h1>Space Flight Simulator</h1>
+        <p>Navigate through space rings in your spaceship!</p>
+        <p>Controls: W to thrust, A/D to roll, Space/Shift to pitch</p>
         <button id="startButton">Start Game</button>
     </div>
     <div id="gameOver">
