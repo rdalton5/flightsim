@@ -266,31 +266,16 @@ function startGame() {
         createRing();
     }
     
-    // Enable pointer lock for mouse controls
-    document.body.requestPointerLock = document.body.requestPointerLock || 
-                                      document.body.mozRequestPointerLock ||
-                                      document.body.webkitRequestPointerLock;
-    document.body.requestPointerLock();
-    
-    // Add mouse movement controls
-    document.addEventListener('mousemove', onMouseMove);
+    // No mouse controls enabled
 }
 
-function onMouseMove(event) {
-    if (!gameStarted || gameOver) return;
-    
-    // Simple mouse look controls
-    if (movement.forward) {
-        plane.rotation.x = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, plane.rotation.x - event.movementY * 0.002));
-        plane.rotation.y -= event.movementX * 0.002;
-    }
-}
+
 
 function endGame() {
     gameOver = true;
     document.getElementById('finalScore').textContent = score;
     document.getElementById('gameOver').style.display = 'block';
-    document.exitPointerLock();
+
 }
 
 function restartGame() {

@@ -54,14 +54,46 @@
         button:hover {
             background-color: #45a049;
         }
+        
+        #controlsOverlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        #controlsOverlay h3 {
+            margin: 0 0 8px 0;
+            border-bottom: 1px solid #666;
+            padding-bottom: 5px;
+        }
+        
+        #controlsOverlay p {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
+    <div id="controlsOverlay">
+        <h3>Controls</h3>
+        <p>W - Move Forward</p>
+        <p>S - Move Backward</p>
+        <p>A - Turn Left</p>
+        <p>D - Turn Right</p>
+        <p>SPACE - Move Up</p>
+        <p>SHIFT - Move Down</p>
+    </div>
     <div id="startScreen">
         <h1>3D Flight Simulator</h1>
         <p>Fly through the rings to score points!</p>
-        <p>Controls: Arrow Keys to move | Mouse to look around</p>
+        <p>Controls: WASD to move, Space to go up, Shift to go down</p>
         <button id="startButton">Start Game</button>
     </div>
     <div id="gameOver">
@@ -70,7 +102,6 @@
         <button id="restartButton">Play Again</button>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/PointerLockControls.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
