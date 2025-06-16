@@ -30,29 +30,11 @@ function init() {
     // Create scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000033); // Dark blue space
-    
-    // Add stars
-    const starGeometry = new THREE.BufferGeometry();
-    const starMaterial = new THREE.PointsMaterial({
-        color: 0xFFFFFF,
-        size: 0.1
-    });
-    
-    const starVertices = [];
-    for (let i = 0; i < 10000; i++) {
-        const x = (Math.random() - 0.5) * 2000;
-        const y = (Math.random() - 0.5) * 2000;
-        const z = (Math.random() - 0.5) * 2000;
-        starVertices.push(x, y, z);
-    }
-    
-    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-    const stars = new THREE.Points(starGeometry, starMaterial);
-    scene.add(stars);
+
+    scene.add(createStars());
 
     // Create camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-    camera.position.set(0, 5, -10);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     // Create renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -93,10 +75,30 @@ function init() {
     animate();
 }
 
+function createStars() {
+    const starGeometry = new THREE.BufferGeometry();
+    const starMaterial = new THREE.PointsMaterial({
+        color: 0xFFFFFF,
+        size: 0.1
+    });
+
+    const starVertices = [];
+    for (let i = 0; i < 10000; i++) {
+        const x = (Math.random() - 0.5) * 2000;
+        const y = (Math.random() - 0.5) * 2000;
+        const z = (Math.random() - 0.5) * 2000;
+        starVertices.push(x, y, z);
+    }
+
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    return stars;
+}
+
 function createSpaceship() {
     // Main fuselage
     const bodyGeometry = new THREE.CylinderGeometry(0.2, 0.4, 5, 8);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ 
+    const bodyMaterial = new THREE.MeshPhongMaterial({
         color: 0x666666,
         shininess: 30
     });
@@ -106,7 +108,7 @@ function createSpaceship() {
 
     // Cockpit
     const cockpitGeometry = new THREE.SphereGeometry(0.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const cockpitMaterial = new THREE.MeshPhongMaterial({ 
+    const cockpitMaterial = new THREE.MeshPhongMaterial({
         color: 0x87ceeb,
         transparent: true,
         opacity: 0.7,
@@ -119,25 +121,25 @@ function createSpaceship() {
     // Wings (4 wings in an X shape)
     const wingMaterial = new THREE.MeshPhongMaterial({ color: 0x555555 });
     const wingGeometry = new THREE.BoxGeometry(0.1, 0.5, 3);
-    
+
     // Upper right wing
     const wingUR = new THREE.Mesh(wingGeometry, wingMaterial);
     wingUR.position.set(0, 0.1, 0);
     wingUR.rotation.z = -Math.PI / 4;
     body.add(wingUR);
-    
+
     // Lower right wing
     const wingLR = new THREE.Mesh(wingGeometry, wingMaterial);
     wingLR.position.set(0, -0.1, 0);
     wingLR.rotation.z = -Math.PI / 4 + 0.2;
     body.add(wingLR);
-    
+
     // Upper left wing
     const wingUL = new THREE.Mesh(wingGeometry, wingMaterial);
     wingUL.position.set(0, 0.1, 0);
     wingUL.rotation.z = Math.PI / 4;
     body.add(wingUL);
-    
+
     // Lower left wing
     const wingLL = new THREE.Mesh(wingGeometry, wingMaterial);
     wingLL.position.set(0, -0.1, 0);
@@ -147,7 +149,7 @@ function createSpaceship() {
     // Wing cannons
     const cannonGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8);
     const cannonMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-    
+
     // Add cannons to each wing
     [wingUR, wingLR, wingUL, wingLL].forEach((wing, i) => {
         const cannon = new THREE.Mesh(cannonGeometry, cannonMaterial);
@@ -159,12 +161,12 @@ function createSpaceship() {
     // Engine nozzles
     const engineGeometry = new THREE.CylinderGeometry(0.15, 0.25, 0.5, 8);
     const engineMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
-    
+
     const engine1 = new THREE.Mesh(engineGeometry, engineMaterial);
     engine1.position.set(-2.5, 0.2, 0);
     engine1.rotation.z = -Math.PI / 2;
     body.add(engine1);
-    
+
     const engine2 = new THREE.Mesh(engineGeometry, engineMaterial);
     engine2.position.set(-2.5, -0.2, 0);
     engine2.rotation.z = -Math.PI / 2;
@@ -172,23 +174,23 @@ function createSpaceship() {
 
     // Engine glow
     const glowGeometry = new THREE.CylinderGeometry(0.1, 0.2, 0.8, 8);
-    const glowMaterial = new THREE.MeshBasicMaterial({ 
+    const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0x00a8ff,
         transparent: true,
         opacity: 0.8,
         blending: THREE.AdditiveBlending
     });
-    
+
     const glow1 = new THREE.Mesh(glowGeometry, glowMaterial);
     glow1.position.set(-2.7, 0.2, 0);
     glow1.rotation.z = -Math.PI / 2;
     body.add(glow1);
-    
+
     const glow2 = new THREE.Mesh(glowGeometry, glowMaterial);
     glow2.position.set(-2.7, -0.2, 0);
     glow2.rotation.z = -Math.PI / 2;
     body.add(glow2);
-    
+
     // Astromech droid head (R2 unit)
     const droidGeometry = new THREE.SphereGeometry(0.2, 16, 16);
     const droidMaterial = new THREE.MeshPhongMaterial({ color: 0x3366cc });
@@ -202,14 +204,12 @@ function createSpaceship() {
     spaceship.position.y = 10;
     spaceship.rotation.y = Math.PI; // Face forward
     scene.add(spaceship);
-    
+
     // Store references to engine glows for animation
     spaceship.userData.engineGlows = [glow1, glow2];
     spaceship.userData.enginePulse = 0;
-    
-    // Position camera behind the spaceship
-    camera.lookAt(spaceship.position);
-    
+
+
     // Add a point light for engine glow
     const engineLight = new THREE.PointLight(0x00a8ff, 1, 10);
     engineLight.position.set(-2.7, 0, 0);
@@ -219,41 +219,41 @@ function createSpaceship() {
 
 function createRing() {
     const ringGeometry = new THREE.TorusGeometry(5, 0.5, 8, 32);
-    const ringMaterial = new THREE.MeshPhongMaterial({ 
+    const ringMaterial = new THREE.MeshPhongMaterial({
         color: Math.random() * 0xffffff,
         emissive: 0x444444,
         shininess: 100
     });
     const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    
+
     // Position the ring randomly in the air
     ring.position.set(
         Math.random() * 400 - 200,
         Math.random() * 100 + 50,
         Math.random() * 400 - 200
     );
-    
+
     // Rotate ring to be vertical
     ring.rotation.x = Math.PI / 2;
-    
+
     // Add a collision box to the ring
     ring.userData = { isRing: true };
-    
+
     scene.add(ring);
     rings.push(ring);
-    
+
     return ring;
 }
 
 function checkCollisions() {
     if (!gameStarted || gameOver) return;
-    
+
     // Check ring collisions
     const shipBox = new THREE.Box3().setFromObject(spaceship);
     for (let i = rings.length - 1; i >= 0; i--) {
         const ring = rings[i];
         const ringBox = new THREE.Box3().setFromObject(ring);
-        
+
         if (shipBox.intersectsBox(ringBox)) {
             scene.remove(ring);
             rings.splice(i, 1);
@@ -273,7 +273,7 @@ function checkCollisions() {
 function updatePlane() {
     const delta = clock.getDelta();
     const speed = movement.speed * 50 * delta;
-    
+
     // Forward/backward movement
     if (movement.forward) {
         spaceship.translateZ(-speed);
@@ -281,7 +281,7 @@ function updatePlane() {
     if (movement.backward) {
         spaceship.translateZ(speed * 0.5);
     }
-    
+
     // Left/right rotation (yaw)
     if (movement.left) {
         spaceship.rotation.y += movement.rotationSpeed;
@@ -289,7 +289,7 @@ function updatePlane() {
     if (movement.right) {
         spaceship.rotation.y -= movement.rotationSpeed;
     }
-    
+
     // Strafing (Q/E)
     if (movement.strafeLeft) {
         spaceship.translateX(-movement.strafeSpeed);
@@ -297,7 +297,7 @@ function updatePlane() {
     if (movement.strafeRight) {
         spaceship.translateX(movement.strafeSpeed);
     }
-    
+
     // Up/down movement
     if (movement.up) {
         spaceship.position.y += speed * 0.5;
@@ -305,17 +305,17 @@ function updatePlane() {
     if (movement.down) {
         spaceship.position.y -= speed * 0.5;
     }
-    
+
     // Small amount of auto-leveling
     spaceship.rotation.x *= 0.98;
     spaceship.rotation.z *= 0.98;
-    
+
     // Update camera position to follow spaceship
-    const offset = new THREE.Vector3(-10, 5, 0);
+    const offset = new THREE.Vector3(0, 3, 10);
     offset.applyQuaternion(spaceship.quaternion);
     camera.position.copy(spaceship.position).add(offset);
     camera.lookAt(spaceship.position);
-    
+
     // Add engine effect when moving forward
     if (movement.forward) {
         const engineGlow = spaceship.children[0].children[3];
@@ -330,7 +330,7 @@ function updatePlane() {
 
 function onKeyDown(event) {
     if (!gameStarted) return;
-    
+
     switch (event.key.toLowerCase()) {
         case 'w':
             movement.forward = true;
@@ -400,12 +400,12 @@ function startGame() {
     gameStarted = true;
     score = 0;
     document.getElementById('score').textContent = `Score: ${score}`;
-    
+
     // Create initial rings
     for (let i = 0; i < 10; i++) {
         createRing();
     }
-    
+
     // No mouse controls enabled
 }
 
@@ -424,22 +424,22 @@ function restartGame() {
         spaceship.position.set(0, 10, 0);
         spaceship.rotation.set(0, 0, 0);
     }
-    
+
     // Remove all rings
     rings.forEach(ring => scene.remove(ring));
     rings = [];
-    
+
     // Reset game state
     gameOver = false;
     document.getElementById('gameOver').style.display = 'none';
-    
+
     // Reset score
     score = 0;
     document.getElementById('score').textContent = `Score: ${score}`;
-    
+
     // Start a new game
     gameStarted = true;
-    
+
     // Create initial rings
     for (let i = 0; i < 10; i++) {
         createRing();
@@ -448,12 +448,12 @@ function restartGame() {
 
 function updatePositionDisplay() {
     if (!spaceship) return;
-    
+
     const pos = spaceship.position;
     document.getElementById('posX').textContent = pos.x.toFixed(2);
     document.getElementById('posY').textContent = pos.y.toFixed(2);
     document.getElementById('posZ').textContent = pos.z.toFixed(2);
-    
+
     // Calculate speed (magnitude of velocity vector)
     const speed = velocity.length();
     document.getElementById('speed').textContent = speed.toFixed(2);
@@ -461,42 +461,42 @@ function updatePositionDisplay() {
 
 function animate() {
     requestAnimationFrame(animate);
-    
+
     const time = performance.now();
     const deltaTime = (time - lastTime) / 1000; // Convert to seconds
     lastTime = time;
-    
+
     // Store position before update for velocity calculation
     if (spaceship) {
         lastPosition.copy(spaceship.position);
     }
-    
+
     updatePlane();
     checkCollisions();
-    
+
     // Calculate velocity based on position change
     if (spaceship && deltaTime > 0) {
         velocity.subVectors(spaceship.position, lastPosition).divideScalar(deltaTime);
-        
+
         // Update engine glow based on movement
         if (spaceship.userData.engineGlows) {
             const pulseSpeed = 0.1;
             spaceship.userData.enginePulse = (spaceship.userData.enginePulse + pulseSpeed) % (Math.PI * 2);
-            
+
             // Pulsing effect for engine glow
             const pulseIntensity = 0.5 + Math.sin(spaceship.userData.enginePulse) * 0.5;
             const glowIntensity = 0.6 + pulseIntensity * 0.4; // 60-100% intensity
-            
+
             spaceship.userData.engineGlows.forEach(glow => {
                 glow.material.opacity = 0.5 * glowIntensity;
                 glow.scale.y = 0.8 + pulseIntensity * 0.4; // Subtle scaling
             });
-            
+
             // Update engine light
             if (spaceship.userData.engineLight) {
                 spaceship.userData.engineLight.intensity = 1 + pulseIntensity * 2;
             }
-            
+
             // Make glow more intense when accelerating
             if (movement.forward) {
                 const boostFactor = 1.5;
@@ -514,15 +514,15 @@ function animate() {
             }
         }
     }
-    
+
     // Update position display
     updatePositionDisplay();
-    
+
     // Rotate rings for visual effect
     rings.forEach(ring => {
         ring.rotation.z += 0.02;
     });
-    
+
     renderer.render(scene, camera);
 }
 
