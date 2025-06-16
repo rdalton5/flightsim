@@ -62,7 +62,7 @@ function init() {
     scene.add(planet);
 
     // Create spaceship
-    createSpaceship();
+    spaceship = createSpaceship(scene);
 
     // Add event listeners
     document.addEventListener('keydown', onKeyDown);
@@ -93,128 +93,6 @@ function createStars() {
     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
     const stars = new THREE.Points(starGeometry, starMaterial);
     return stars;
-}
-
-function createSpaceship() {
-    // Main fuselage
-    const bodyGeometry = new THREE.CylinderGeometry(0.2, 0.4, 5, 8);
-    const bodyMaterial = new THREE.MeshPhongMaterial({
-        color: 0x666666,
-        shininess: 30
-    });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.rotation.z = -Math.PI / 2;
-    body.position.x = -0.5;
-
-    // Cockpit
-    const cockpitGeometry = new THREE.SphereGeometry(0.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const cockpitMaterial = new THREE.MeshPhongMaterial({
-        color: 0x87ceeb,
-        transparent: true,
-        opacity: 0.7,
-        shininess: 100
-    });
-    const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
-    cockpit.position.set(0.8, 0.2, 0);
-    body.add(cockpit);
-
-    // Wings (4 wings in an X shape)
-    const wingMaterial = new THREE.MeshPhongMaterial({ color: 0x555555 });
-    const wingGeometry = new THREE.BoxGeometry(0.1, 0.5, 3);
-
-    // Upper right wing
-    const wingUR = new THREE.Mesh(wingGeometry, wingMaterial);
-    wingUR.position.set(0, 0.1, 0);
-    wingUR.rotation.z = -Math.PI / 4;
-    body.add(wingUR);
-
-    // Lower right wing
-    const wingLR = new THREE.Mesh(wingGeometry, wingMaterial);
-    wingLR.position.set(0, -0.1, 0);
-    wingLR.rotation.z = -Math.PI / 4 + 0.2;
-    body.add(wingLR);
-
-    // Upper left wing
-    const wingUL = new THREE.Mesh(wingGeometry, wingMaterial);
-    wingUL.position.set(0, 0.1, 0);
-    wingUL.rotation.z = Math.PI / 4;
-    body.add(wingUL);
-
-    // Lower left wing
-    const wingLL = new THREE.Mesh(wingGeometry, wingMaterial);
-    wingLL.position.set(0, -0.1, 0);
-    wingLL.rotation.z = Math.PI / 4 - 0.2;
-    body.add(wingLL);
-
-    // Wing cannons
-    const cannonGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8);
-    const cannonMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-
-    // Add cannons to each wing
-    [wingUR, wingLR, wingUL, wingLL].forEach((wing, i) => {
-        const cannon = new THREE.Mesh(cannonGeometry, cannonMaterial);
-        cannon.rotation.z = Math.PI / 2;
-        cannon.position.z = -1.5;
-        wing.add(cannon);
-    });
-
-    // Engine nozzles
-    const engineGeometry = new THREE.CylinderGeometry(0.15, 0.25, 0.5, 8);
-    const engineMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
-
-    const engine1 = new THREE.Mesh(engineGeometry, engineMaterial);
-    engine1.position.set(-2.5, 0.2, 0);
-    engine1.rotation.z = -Math.PI / 2;
-    body.add(engine1);
-
-    const engine2 = new THREE.Mesh(engineGeometry, engineMaterial);
-    engine2.position.set(-2.5, -0.2, 0);
-    engine2.rotation.z = -Math.PI / 2;
-    body.add(engine2);
-
-    // Engine glow
-    const glowGeometry = new THREE.CylinderGeometry(0.1, 0.2, 0.8, 8);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0x00a8ff,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending
-    });
-
-    const glow1 = new THREE.Mesh(glowGeometry, glowMaterial);
-    glow1.position.set(-2.7, 0.2, 0);
-    glow1.rotation.z = -Math.PI / 2;
-    body.add(glow1);
-
-    const glow2 = new THREE.Mesh(glowGeometry, glowMaterial);
-    glow2.position.set(-2.7, -0.2, 0);
-    glow2.rotation.z = -Math.PI / 2;
-    body.add(glow2);
-
-    // Astromech droid head (R2 unit)
-    const droidGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-    const droidMaterial = new THREE.MeshPhongMaterial({ color: 0x3366cc });
-    const droid = new THREE.Mesh(droidGeometry, droidMaterial);
-    droid.position.set(1.2, 0, 0);
-    body.add(droid);
-
-    // Create the spaceship group
-    spaceship = new THREE.Group();
-    spaceship.add(body);
-    spaceship.position.y = 10;
-    spaceship.rotation.y = Math.PI; // Face forward
-    scene.add(spaceship);
-
-    // Store references to engine glows for animation
-    spaceship.userData.engineGlows = [glow1, glow2];
-    spaceship.userData.enginePulse = 0;
-
-
-    // Add a point light for engine glow
-    const engineLight = new THREE.PointLight(0x00a8ff, 1, 10);
-    engineLight.position.set(-2.7, 0, 0);
-    spaceship.add(engineLight);
-    spaceship.userData.engineLight = engineLight;
 }
 
 function createRing() {
@@ -318,13 +196,13 @@ function updatePlane() {
 
     // Add engine effect when moving forward
     if (movement.forward) {
-        const engineGlow = spaceship.children[0].children[3];
-        engineGlow.material.opacity = 0.9;
-        engineGlow.material.color.set(0xff4500); // Brighter orange/red
+        // const engineGlow = spaceship.children[0].children[3];
+        // engineGlow.material.opacity = 0.9;
+        // engineGlow.material.color.set(0xff4500); // Brighter orange/red
     } else {
-        const engineGlow = spaceship.children[0].children[3];
-        engineGlow.material.opacity = 0.5;
-        engineGlow.material.color.set(0xff7f00); // Dimmer orange
+        // const engineGlow = spaceship.children[0].children[3];
+        // engineGlow.material.opacity = 0.5;
+        // engineGlow.material.color.set(0xff7f00); // Dimmer orange
     }
 }
 
