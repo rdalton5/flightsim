@@ -1,6 +1,6 @@
 // Game variables
 let scene, camera, renderer, controls;
-let spaceship, rings = [];
+let spaceship, rings = [], lasers = [];
 let score = 0;
 let gameStarted = false;
 let gameOver = false;
@@ -20,6 +20,7 @@ const movement = {
     down: false,
     strafeLeft: false,
     strafeRight: false,
+    shoot: false,
     speed: 0.2,
     rotationSpeed: 0.03,
     strafeSpeed: 0.1
@@ -67,6 +68,7 @@ function init() {
     // Add event listeners
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+    document.addEventListener('mousedown', onMouseDown);
     document.getElementById('startButton').addEventListener('click', startGame);
     document.getElementById('restartButton').addEventListener('click', restartGame);
     window.addEventListener('resize', onWindowResize);
@@ -123,25 +125,62 @@ function createRing() {
     return ring;
 }
 
+function createLaser() {
+    const laserGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+    const laserMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        emissive: 0xff0000,
+        emissiveIntensity: 0.5
+    });
+    const laser = new THREE.Mesh(laserGeometry, laserMaterial);
+    
+    // Position laser at spaceship's position and orientation
+    laser.position.copy(spaceship.position);
+    laser.rotation.copy(spaceship.rotation);
+    
+    // Add velocity to laser
+    const direction = new THREE.Vector3(0, 0, -1);
+    direction.applyQuaternion(spaceship.quaternion);
+    laser.userData.velocity = direction.multiplyScalar(100); // Fast laser speed
+    laser.userData.life = 3; // Laser lives for 3 seconds
+    
+    scene.add(laser);
+    lasers.push(laser);
+    
+    return laser;
+}
+
 function checkCollisions() {
     if (!gameStarted || gameOver) return;
 
-    // Check ring collisions
-    const shipBox = new THREE.Box3().setFromObject(spaceship);
-    for (let i = rings.length - 1; i >= 0; i--) {
-        const ring = rings[i];
-        const ringBox = new THREE.Box3().setFromObject(ring);
+    // Check laser-ring collisions
+    for (let i = lasers.length - 1; i >= 0; i--) {
+        const laser = lasers[i];
+        const laserBox = new THREE.Box3().setFromObject(laser);
+        
+        for (let j = rings.length - 1; j >= 0; j--) {
+            const ring = rings[j];
+            const ringBox = new THREE.Box3().setFromObject(ring);
 
-        if (shipBox.intersectsBox(ringBox)) {
-            scene.remove(ring);
-            rings.splice(i, 1);
-            score += 10;
-            document.getElementById('score').textContent = `Score: ${score}`;
-            createRing();
+            if (laserBox.intersectsBox(ringBox)) {
+                // Remove both laser and ring
+                scene.remove(laser);
+                scene.remove(ring);
+                lasers.splice(i, 1);
+                rings.splice(j, 1);
+                
+                // Increase score
+                score += 10;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                
+                // Create a new ring
+                createRing();
+                break; // Exit ring loop since laser is destroyed
+            }
         }
     }
 
-    // Check out of bounds
+    // Check out of bounds for spaceship
     if (spaceship.position.y < -100 || spaceship.position.y > 1000 ||
         Math.abs(spaceship.position.x) > 1000 || Math.abs(spaceship.position.z) > 1000) {
         endGame();
@@ -194,6 +233,29 @@ function updatePlane() {
     camera.position.copy(spaceship.position).add(offset);
     camera.lookAt(spaceship.position);
 
+    // Update lasers
+    for (let i = lasers.length - 1; i >= 0; i--) {
+        const laser = lasers[i];
+        
+        // Move laser forward
+        laser.position.add(laser.userData.velocity.clone().multiplyScalar(delta));
+        
+        // Decrease laser life
+        laser.userData.life -= delta;
+        
+        // Remove laser if it's too old or too far away
+        if (laser.userData.life <= 0 || laser.position.distanceTo(spaceship.position) > 500) {
+            scene.remove(laser);
+            lasers.splice(i, 1);
+        }
+    }
+
+    // Shoot laser if shoot key is pressed
+    if (movement.shoot) {
+        createLaser();
+        movement.shoot = false; // Reset shoot to prevent continuous fire
+    }
+
     // Add engine effect when moving forward
     if (movement.forward) {
         // const engineGlow = spaceship.children[0].children[3];
@@ -223,6 +285,7 @@ function onKeyDown(event) {
             movement.right = true;
             break;
         case ' ':
+            event.preventDefault(); // Prevent page scroll
             movement.up = true;
             break;
         case 'shift':
@@ -233,6 +296,9 @@ function onKeyDown(event) {
             break;
         case 'e':
             movement.strafeRight = true;
+            break;
+        case 'r':
+            movement.up = true;
             break;
     }
 }
@@ -263,6 +329,19 @@ function onKeyUp(event) {
         case 'e':
             movement.strafeRight = false;
             break;
+        case 'r':
+            movement.up = false;
+            break;
+    }
+}
+
+function onMouseDown(event) {
+    if (!gameStarted) return;
+    
+    // Left mouse button (button 0) shoots
+    if (event.button === 0) {
+        event.preventDefault();
+        movement.shoot = true;
     }
 }
 
@@ -306,6 +385,10 @@ function restartGame() {
     // Remove all rings
     rings.forEach(ring => scene.remove(ring));
     rings = [];
+
+    // Remove all lasers
+    lasers.forEach(laser => scene.remove(laser));
+    lasers = [];
 
     // Reset game state
     gameOver = false;
