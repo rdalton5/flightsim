@@ -9,6 +9,7 @@ let stars = [];
 let lastPosition = new THREE.Vector3();
 let velocity = new THREE.Vector3();
 let lastTime = 0;
+let lastShotTime = 0; // Track last shot time for firing rate limit
 
 // Movement variables
 const movement = {
@@ -250,9 +251,13 @@ function updatePlane() {
         }
     }
 
-    // Shoot laser if shoot key is pressed
+    // Shoot laser if shoot key is pressed and enough time has passed
     if (movement.shoot) {
-        createLaser();
+        const currentTime = performance.now();
+        if (currentTime - lastShotTime >= 150) { // 250ms minimum between shots
+            createLaser();
+            lastShotTime = currentTime;
+        }
         movement.shoot = false; // Reset shoot to prevent continuous fire
     }
 
