@@ -1,6 +1,6 @@
 // Game variables
 let scene, camera, renderer, controls;
-let spaceship, rings = [], lasers = [];
+let spaceship, rings = [], lasers = [], explosions = [];
 let score = 0;
 let gameStarted = false;
 let gameOver = false;
@@ -163,6 +163,76 @@ function createRing() {
     return asteroid;
 }
 
+function createExplosion(position) {
+    const explosionGroup = new THREE.Group();
+    
+    // Create multiple particle systems for the explosion
+    const particleCount = 20;
+    const particles = [];
+    
+    for (let i = 0; i < particleCount; i++) {
+        // Create debris particles
+        const debrisGeometry = new THREE.BoxGeometry(
+            0.1 + Math.random() * 0.3,
+            0.1 + Math.random() * 0.3,
+            0.1 + Math.random() * 0.3
+        );
+        const debrisMaterial = new THREE.MeshBasicMaterial({
+            color: new THREE.Color().setHSL(0.1 + Math.random() * 0.1, 0.8, 0.4 + Math.random() * 0.4),
+            transparent: true,
+            opacity: 0.8
+        });
+        const debris = new THREE.Mesh(debrisGeometry, debrisMaterial);
+        
+        // Random position within explosion radius
+        debris.position.set(
+            (Math.random() - 0.5) * 2,
+            (Math.random() - 0.5) * 2,
+            (Math.random() - 0.5) * 2
+        );
+        
+        // Random velocity for debris
+        debris.userData.velocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 20,
+            (Math.random() - 0.5) * 20,
+            (Math.random() - 0.5) * 20
+        );
+        
+        debris.userData.angularVelocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.2,
+            (Math.random() - 0.5) * 0.2,
+            (Math.random() - 0.5) * 0.2
+        );
+        
+        explosionGroup.add(debris);
+        particles.push(debris);
+    }
+    
+    // Add energy flash effect
+    const flashGeometry = new THREE.SphereGeometry(8, 16, 16);
+    const flashMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffaa00,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+    });
+    const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+    explosionGroup.add(flash);
+    
+    explosionGroup.position.copy(position);
+    explosionGroup.userData = {
+        particles: particles,
+        flash: flash,
+        life: 2.0, // Explosion lasts 2 seconds
+        maxLife: 2.0
+    };
+    
+    scene.add(explosionGroup);
+    explosions.push(explosionGroup);
+    
+    return explosionGroup;
+}
+
 function createLaser() {
     const laserGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
     const laserMaterial = new THREE.MeshBasicMaterial({
@@ -201,6 +271,9 @@ function checkCollisions() {
             const ringBox = new THREE.Box3().setFromObject(ring);
 
             if (laserBox.intersectsBox(ringBox)) {
+                // Create explosion at asteroid position
+                createExplosion(ring.position);
+                
                 // Remove both laser and ring
                 scene.remove(laser);
                 scene.remove(ring);
@@ -285,6 +358,43 @@ function updatePlane() {
         if (laser.userData.life <= 0 || laser.position.distanceTo(spaceship.position) > 500) {
             scene.remove(laser);
             lasers.splice(i, 1);
+        }
+    }
+
+    // Update explosions
+    for (let i = explosions.length - 1; i >= 0; i--) {
+        const explosion = explosions[i];
+        explosion.userData.life -= delta;
+        
+        const lifeRatio = explosion.userData.life / explosion.userData.maxLife;
+        
+        // Update flash effect
+        if (explosion.userData.flash) {
+            explosion.userData.flash.material.opacity = Math.max(0, lifeRatio * 0.6);
+            explosion.userData.flash.scale.setScalar(2 - lifeRatio);
+        }
+        
+        // Update debris particles
+        explosion.userData.particles.forEach(particle => {
+            // Move particles
+            particle.position.add(particle.userData.velocity.clone().multiplyScalar(delta));
+            
+            // Rotate particles
+            particle.rotation.x += particle.userData.angularVelocity.x;
+            particle.rotation.y += particle.userData.angularVelocity.y;
+            particle.rotation.z += particle.userData.angularVelocity.z;
+            
+            // Fade out particles
+            particle.material.opacity = Math.max(0, lifeRatio * 0.8);
+            
+            // Slow down particles over time
+            particle.userData.velocity.multiplyScalar(0.98);
+        });
+        
+        // Remove expired explosions
+        if (explosion.userData.life <= 0) {
+            scene.remove(explosion);
+            explosions.splice(i, 1);
         }
     }
 
@@ -431,6 +541,10 @@ function restartGame() {
     // Remove all lasers
     lasers.forEach(laser => scene.remove(laser));
     lasers = [];
+
+    // Remove all explosions
+    explosions.forEach(explosion => scene.remove(explosion));
+    explosions = [];
 
     // Reset game state
     gameOver = false;
