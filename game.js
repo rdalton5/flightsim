@@ -273,6 +273,7 @@ function checkCollisions() {
             if (laserBox.intersectsBox(ringBox)) {
                 // Create explosion at asteroid position
                 createExplosion(ring.position);
+                playExplosionSound();
                 
                 // Remove both laser and ring
                 scene.remove(laser);
@@ -403,6 +404,7 @@ function updatePlane() {
         const currentTime = performance.now();
         if (currentTime - lastShotTime >= 150) { // 250ms minimum between shots
             createLaser();
+            playLaserSound();
             lastShotTime = currentTime;
         }
         movement.shoot = false; // Reset shoot to prevent continuous fire
