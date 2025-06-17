@@ -289,10 +289,15 @@ function createLaser() {
         // Position laser at cannon tip
         laser.position.copy(worldCannonPos);
         
-        // Add velocity to laser in forward direction
-        const direction = new THREE.Vector3(0, 0, -1);
-        direction.applyQuaternion(spaceship.quaternion);
-        laser.userData.velocity = direction.multiplyScalar(120); // Fast laser speed
+        // Orient laser to match spaceship's rotation
+        laser.rotation.copy(spaceship.rotation);
+        
+        // Use spaceship's forward direction for laser velocity
+        // Make sure we get the actual forward direction of the spaceship
+        const spaceshipForward = new THREE.Vector3(0, 0, -1);
+        spaceshipForward.applyQuaternion(spaceship.quaternion);
+        
+        laser.userData.velocity = spaceshipForward.multiplyScalar(120); // Fast laser speed
         laser.userData.life = 3; // Laser lives for 3 seconds
         
         scene.add(laser);
