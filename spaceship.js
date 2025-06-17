@@ -134,6 +134,7 @@ function createSpaceship(scene) {
     // Store references to engine glows for animation
     spaceship.userData.engineGlows = engineGlows;
     spaceship.userData.enginePulse = 0;
+    spaceship.userData.wings = wings;
 
     // Add point lights for engine glow
     const engineLights = [];

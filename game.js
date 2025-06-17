@@ -234,28 +234,70 @@ function createExplosion(position) {
 }
 
 function createLaser() {
-    const laserGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
-    const laserMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
-        emissive: 0xff0000,
-        emissiveIntensity: 0.5
+    // Get the wings from the spaceship
+    const wings = spaceship.userData.wings;
+    if (!wings || wings.length === 0) return;
+    
+    // Alternate between wing pairs for firing
+    // This creates a more realistic X-wing firing pattern
+    const wingPairs = [
+        [0, 1], // Top and bottom right wings
+        [2, 3]  // Top and bottom left wings
+    ];
+    
+    // Use a static counter to alternate between wing pairs
+    if (!createLaser.wingPairIndex) createLaser.wingPairIndex = 0;
+    const currentPair = wingPairs[createLaser.wingPairIndex % wingPairs.length];
+    createLaser.wingPairIndex++;
+    
+    currentPair.forEach(wingIndex => {
+        const wing = wings[wingIndex];
+        
+        // Create laser using BoxGeometry to avoid rotation issues
+        const laserGeometry = new THREE.BoxGeometry(0.04, 0.04, 2);
+        const laserMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff2200,
+            emissive: 0xff2200,
+            emissiveIntensity: 1.0
+        });
+        const laser = new THREE.Mesh(laserGeometry, laserMaterial);
+        
+        // Add a bright glow around the laser
+        const glowGeometry = new THREE.BoxGeometry(0.08, 0.08, 2);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff6600,
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        laser.add(glow);
+        
+        // Calculate world position of cannon tip
+        // Each wing has cannons at specific positions
+        const cannonOffset = new THREE.Vector3(0, -0.3, -2.005); // Front cannon position
+        const worldCannonPos = new THREE.Vector3();
+        const wingWorldMatrix = new THREE.Matrix4();
+        
+        // Get wing's world matrix
+        wing.updateMatrixWorld();
+        wingWorldMatrix.copy(wing.matrixWorld);
+        
+        // Transform cannon position to world coordinates
+        worldCannonPos.copy(cannonOffset).applyMatrix4(wingWorldMatrix);
+        
+        // Position laser at cannon tip
+        laser.position.copy(worldCannonPos);
+        
+        // Add velocity to laser in forward direction
+        const direction = new THREE.Vector3(0, 0, -1);
+        direction.applyQuaternion(spaceship.quaternion);
+        laser.userData.velocity = direction.multiplyScalar(120); // Fast laser speed
+        laser.userData.life = 3; // Laser lives for 3 seconds
+        
+        scene.add(laser);
+        lasers.push(laser);
     });
-    const laser = new THREE.Mesh(laserGeometry, laserMaterial);
-    
-    // Position laser at spaceship's position and orientation
-    laser.position.copy(spaceship.position);
-    laser.rotation.copy(spaceship.rotation);
-    
-    // Add velocity to laser
-    const direction = new THREE.Vector3(0, 0, -1);
-    direction.applyQuaternion(spaceship.quaternion);
-    laser.userData.velocity = direction.multiplyScalar(100); // Fast laser speed
-    laser.userData.life = 3; // Laser lives for 3 seconds
-    
-    scene.add(laser);
-    lasers.push(laser);
-    
-    return laser;
 }
 
 function checkCollisions() {
