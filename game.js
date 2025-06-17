@@ -468,7 +468,7 @@ function updatePlane() {
     spaceship.rotation.z *= 0.98;
 
     // Update camera position to follow spaceship
-    const offset = new THREE.Vector3(0, 3, 15);
+    const offset = new THREE.Vector3(0, 3, 20);
     offset.applyQuaternion(spaceship.quaternion);
     camera.position.copy(spaceship.position).add(offset);
     camera.lookAt(spaceship.position);
