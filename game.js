@@ -27,8 +27,27 @@ const movement = {
     strafeSpeed: 0.1
 };
 
+// Mobile control variables
+const mobileControls = {
+    thrustForward: false,
+    thrustBackward: false,
+    moveUp: false,
+    moveDown: false,
+    turnLeft: false,
+    turnRight: false,
+    fire: false
+};
+
+let isMobile = false;
+
 // Initialize the game
 function init() {
+    // Detect mobile device early
+    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    
+    console.log('Mobile detected:', isMobile); // Debug
+    
     // Create scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000033); // Dark blue space
@@ -71,8 +90,29 @@ function init() {
     document.addEventListener('keyup', onKeyUp);
     document.addEventListener('mousedown', onMouseDown);
     document.getElementById('startButton').addEventListener('click', startGame);
+    document.getElementById('startButton').addEventListener('touchstart', startGame);
     document.getElementById('restartButton').addEventListener('click', restartGame);
+    document.getElementById('restartButton').addEventListener('touchstart', restartGame);
     window.addEventListener('resize', onWindowResize);
+
+    // Initialize mobile controls
+    initMobileControls();
+
+    // Prevent default touch behaviors on mobile
+    if (isMobile) {
+        // Temporarily commenting out preventDefault to debug
+        /*
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+        */
+    }
 
     // Start the game loop
     animate();
@@ -350,36 +390,77 @@ function updatePlane() {
     const delta = clock.getDelta();
     const speed = movement.speed * 50 * delta;
 
-    // Forward/backward movement
-    if (movement.forward) {
-        spaceship.translateZ(-speed);
-    }
-    if (movement.backward) {
-        spaceship.translateZ(speed * 0.5);
-    }
+    // Handle mobile controls
+    if (isMobile) {
+        // Thrust controls
+        if (mobileControls.thrustForward) {
+            console.log('Thrust forward active'); // Debug
+            spaceship.translateZ(-speed);
+        }
+        if (mobileControls.thrustBackward) {
+            console.log('Thrust backward active'); // Debug
+            spaceship.translateZ(speed * 0.5);
+        }
+        
+        // Movement controls
+        if (mobileControls.moveUp) {
+            console.log('Move up active'); // Debug
+            spaceship.translateY(movement.strafeSpeed * 50 * delta);
+        }
+        if (mobileControls.moveDown) {
+            console.log('Move down active'); // Debug
+            spaceship.translateY(-movement.strafeSpeed * 50 * delta);
+        }
+        
+        // Turn controls
+        if (mobileControls.turnLeft) {
+            console.log('Turn left active'); // Debug
+            spaceship.rotation.y += movement.rotationSpeed;
+        }
+        if (mobileControls.turnRight) {
+            console.log('Turn right active'); // Debug
+            spaceship.rotation.y -= movement.rotationSpeed;
+        }
+        
+        // Fire control
+        if (mobileControls.fire) {
+            movement.shoot = true;
+        } else {
+            movement.shoot = false;
+        }
+    } else {
+        // Desktop keyboard controls
+        // Forward/backward movement
+        if (movement.forward) {
+            spaceship.translateZ(-speed);
+        }
+        if (movement.backward) {
+            spaceship.translateZ(speed * 0.5);
+        }
 
-    // Left/right rotation (yaw)
-    if (movement.left) {
-        spaceship.rotation.y += movement.rotationSpeed;
-    }
-    if (movement.right) {
-        spaceship.rotation.y -= movement.rotationSpeed;
-    }
+        // Left/right rotation (yaw)
+        if (movement.left) {
+            spaceship.rotation.y += movement.rotationSpeed;
+        }
+        if (movement.right) {
+            spaceship.rotation.y -= movement.rotationSpeed;
+        }
 
-    // Strafing (Q/E)
-    if (movement.strafeLeft) {
-        spaceship.translateX(-movement.strafeSpeed);
-    }
-    if (movement.strafeRight) {
-        spaceship.translateX(movement.strafeSpeed);
-    }
+        // Strafing (Q/E)
+        if (movement.strafeLeft) {
+            spaceship.translateX(-movement.strafeSpeed * 50 * delta);
+        }
+        if (movement.strafeRight) {
+            spaceship.translateX(movement.strafeSpeed * 50 * delta);
+        }
 
-    // Up/down movement
-    if (movement.up) {
-        spaceship.position.y += speed * 0.5;
-    }
-    if (movement.down) {
-        spaceship.position.y -= speed * 0.5;
+        // Up/down movement
+        if (movement.up) {
+            spaceship.translateY(movement.strafeSpeed * 50 * delta);
+        }
+        if (movement.down) {
+            spaceship.translateY(-movement.strafeSpeed * 50 * delta);
+        }
     }
 
     // Small amount of auto-leveling
@@ -387,7 +468,7 @@ function updatePlane() {
     spaceship.rotation.z *= 0.98;
 
     // Update camera position to follow spaceship
-    const offset = new THREE.Vector3(0, 3, 10);
+    const offset = new THREE.Vector3(0, 3, 15);
     offset.applyQuaternion(spaceship.quaternion);
     camera.position.copy(spaceship.position).add(offset);
     camera.lookAt(spaceship.position);
@@ -694,6 +775,45 @@ function animate() {
     });
 
     renderer.render(scene, camera);
+}
+
+// Touch handling for mobile controls
+function initMobileControls() {
+    if (!isMobile) return;
+    
+    // Get all the control buttons
+    const controls = {
+        thrustForward: document.getElementById('thrustForward'),
+        thrustBackward: document.getElementById('thrustBackward'),
+        moveUp: document.getElementById('moveUp'),
+        moveDown: document.getElementById('moveDown'),
+        turnLeft: document.getElementById('turnLeft'),
+        turnRight: document.getElementById('turnRight'),
+        fire: document.getElementById('fireButton')
+    };
+    
+    // Setup touch events for each control
+    Object.keys(controls).forEach(controlName => {
+        const element = controls[controlName];
+        if (!element) return;
+        
+        element.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            mobileControls[controlName] = true;
+            console.log(`${controlName} pressed`); // Debug
+        });
+        
+        element.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            mobileControls[controlName] = false;
+            console.log(`${controlName} released`); // Debug
+        });
+        
+        element.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            mobileControls[controlName] = false;
+        });
+    });
 }
 
 // Start the game
