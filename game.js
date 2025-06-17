@@ -560,7 +560,7 @@ function startGame() {
     document.getElementById('score').textContent = `Score: ${score}`;
 
     // Create initial rings
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 50; i++) {
         createRing();
     }
 
@@ -607,7 +607,7 @@ function restartGame() {
     gameStarted = true;
 
     // Create initial rings
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 50; i++) {
         createRing();
     }
 }

@@ -127,7 +127,7 @@ function createSpaceship(scene) {
     // Create the spaceship group
     const spaceship = new THREE.Group();
     spaceship.add(body);
-    spaceship.position.y = 10;
+    spaceship.position.y = 100; // Start halfway up the Y axis
     spaceship.rotation.y = Math.PI; // Face forward
     scene.add(spaceship);
 
