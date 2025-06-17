@@ -99,31 +99,68 @@ function createStars() {
 }
 
 function createRing() {
-    const ringGeometry = new THREE.TorusGeometry(5, 0.5, 8, 32);
-    const ringMaterial = new THREE.MeshPhongMaterial({
-        color: Math.random() * 0xffffff,
-        emissive: 0x444444,
-        shininess: 100
+    // Create asteroid using irregular sphere geometry
+    const asteroidGeometry = new THREE.SphereGeometry(
+        3 + Math.random() * 4, // Random size between 3-7 units
+        8 + Math.floor(Math.random() * 8), // Random detail level 8-16
+        6 + Math.floor(Math.random() * 6)  // Random detail level 6-12
+    );
+    
+    // Make the asteroid irregular by randomly displacing vertices
+    const positions = asteroidGeometry.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+        const vertex = new THREE.Vector3(
+            positions.getX(i),
+            positions.getY(i),
+            positions.getZ(i)
+        );
+        
+        // Add random displacement to make it irregular
+        const displacement = 0.3 + Math.random() * 0.7;
+        vertex.multiplyScalar(displacement);
+        
+        positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
+    }
+    positions.needsUpdate = true;
+    asteroidGeometry.computeVertexNormals();
+    
+    // Create rocky asteroid material
+    const asteroidMaterial = new THREE.MeshPhongMaterial({
+        color: new THREE.Color().setHSL(0.1, 0.2, 0.3 + Math.random() * 0.3), // Brownish-gray variations
+        shininess: 5, // Low shininess for rocky appearance
+        flatShading: true // Gives it a more angular, rocky look
     });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    
+    const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
 
-    // Position the ring randomly in the air
-    ring.position.set(
+    // Position the asteroid randomly in space
+    asteroid.position.set(
         Math.random() * 400 - 200,
         Math.random() * 100 + 50,
         Math.random() * 400 - 200
     );
 
-    // Rotate ring to be vertical
-    ring.rotation.x = Math.PI / 2;
+    // Random rotation
+    asteroid.rotation.set(
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2
+    );
 
-    // Add a collision box to the ring
-    ring.userData = { isRing: true };
+    // Add asteroid metadata
+    asteroid.userData = { 
+        isRing: true, // Keep same collision detection
+        rotationSpeed: {
+            x: (Math.random() - 0.5) * 0.02,
+            y: (Math.random() - 0.5) * 0.02,
+            z: (Math.random() - 0.5) * 0.02
+        }
+    };
 
-    scene.add(ring);
-    rings.push(ring);
+    scene.add(asteroid);
+    rings.push(asteroid);
 
-    return ring;
+    return asteroid;
 }
 
 function createLaser() {
@@ -484,9 +521,13 @@ function animate() {
     // Update position display
     updatePositionDisplay();
 
-    // Rotate rings for visual effect
-    rings.forEach(ring => {
-        ring.rotation.z += 0.02;
+    // Rotate asteroids for visual effect
+    rings.forEach(asteroid => {
+        if (asteroid.userData.rotationSpeed) {
+            asteroid.rotation.x += asteroid.userData.rotationSpeed.x;
+            asteroid.rotation.y += asteroid.userData.rotationSpeed.y;
+            asteroid.rotation.z += asteroid.userData.rotationSpeed.z;
+        }
     });
 
     renderer.render(scene, camera);
